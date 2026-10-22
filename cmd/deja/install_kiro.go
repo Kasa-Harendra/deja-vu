@@ -115,6 +115,7 @@ func installKiro(exe string, uninstall bool) (installResult, error) {
 		return installResult{}, err
 	}
 	if uninstall {
+		pruneCreatedDir(filepath.Dir(kiroMCPSettingsPath()))
 		return wroteAll(res, steering, skill), nil
 	}
 	out := wroteAll(res, steering, skill)
@@ -209,6 +210,9 @@ func installKiroAuto(exe string, uninstall bool) (installResult, error) {
 		if err := kiroForgetDefaultAgent(); err != nil {
 			return installResult{}, err
 		}
+	}
+	if uninstall {
+		pruneCreatedDir(filepath.Dir(kiroSettingsPath()))
 	}
 	out := wroteAll(base, agent)
 	if !uninstall {
