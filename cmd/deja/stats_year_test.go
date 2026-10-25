@@ -49,6 +49,58 @@ func TestYearScreenLabelsItsArithmeticAndRedactsWhatItQuotes(t *testing.T) {
 	}
 }
 
+// A report with counts of 1 reads "1 session", "1 turn", "1 record" rather
+// than pluralising every line (#5655).
+func TestYearScreenPluralisesSingularCounts(t *testing.T) {
+	now := time.Now()
+	r := yearReport{
+		from:         now.Add(-24 * time.Hour),
+		to:           now,
+		sessions:     1,
+		messages:     1,
+		harnesses:    []harnessYear{{Harness: "claude", Sessions: 1}},
+		projects:     []projectYear{{Project: "app", Sessions: 1}},
+		busiestDay:   now.Format("2006-01-02"),
+		busiestCount: 1,
+		longestTitle: "single turn session",
+		longestTurns: 1,
+		work: index.YearWork{
+			Files:     1,
+			Commands:  1,
+			Spans:     1,
+			SpanFiles: 1,
+			Records: map[string]int{
+				"files":   1,
+				"command": 1,
+			},
+			Undated: 1,
+		},
+	}
+	var out bytes.Buffer
+	printYear(&out, r)
+	got := out.String()
+
+	for _, wrong := range []string{"1 sessions", "1 turns", "1 records"} {
+		if strings.Contains(got, wrong) {
+			t.Errorf("printYear output contains %q:\n%s", wrong, got)
+		}
+	}
+	for _, want := range []string{
+		"1 session, 1 turn in them, across claude",
+		"busiest project        app, 1 session\n",
+		"busiest day",
+		"1 turn\n",
+		"longest session        1 turn — single turn session",
+		"1 record naming a file",
+		"1 command record, deduplicated by the command line",
+		"1 work record carry no timestamp",
+	} {
+		if !strings.Contains(got, want) {
+			t.Errorf("missing expected singular phrasing %q in output:\n%s", want, got)
+		}
+	}
+}
+
 func TestYearJSONCarriesTheSameNumbers(t *testing.T) {
 	dir := yearFixture(t)
 	var out bytes.Buffer
