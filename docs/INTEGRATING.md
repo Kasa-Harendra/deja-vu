@@ -62,6 +62,15 @@ Whatever writes the config, **name the server `deja`**. Every manifest we ship
 uses that name, so a machine where both your tool and `deja install` have run
 collapses to one server rather than listing every tool twice.
 
+A `tools/call` that is still running after 20 seconds is answered with a note.
+The note says deja has not finished this call, so this is not its answer, and
+that the work is still running; call again with the same arguments within about
+ten minutes and the answer comes back once it is ready. The 20 second mark sits
+under common client limits (opencode gives up at 30 seconds, Codex at 60). Set
+`DEJA_MCP_DEADLINE` to change the wait: a number of seconds (`45`, `2.5`), a
+Go duration (`1m`, `40s`), or `0` to turn the deadline off. A value that does
+not parse, or a negative one, keeps the 20 second default.
+
 ## The JSON surfaces
 
 `deja search`, `blame`, `fix`, `how`, `files`, `wip`, `last`, `show`, `stats`,

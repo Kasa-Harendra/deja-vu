@@ -272,8 +272,11 @@ func TestMCPDeadlineFromEnv(t *testing.T) {
 	for in, want := range map[string]time.Duration{
 		"":     20 * time.Second,
 		"25":   25 * time.Second,
+		"45":   45 * time.Second,
 		"1.5":  1500 * time.Millisecond,
+		"2.5":  2500 * time.Millisecond,
 		"40s":  40 * time.Second,
+		"1m":   time.Minute,
 		"0":    0,
 		"junk": 20 * time.Second,
 		"-3":   20 * time.Second,
