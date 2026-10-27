@@ -31,6 +31,12 @@ import (
 // also the directory its settings live in.
 const RooExtensionID = "rooveterinaryinc.roo-cline"
 
+// RooDefaultRoot is the extension's globalStorage directory in VS Code, for a
+// report to name on a machine where Roo is not installed yet.
+func RooDefaultRoot() string {
+	return filepath.Join(vsCodeUserDir("Code"), "globalStorage", RooExtensionID)
+}
+
 // RooRoots lists the VS Code globalStorage dirs of the Roo extension.
 func RooRoots() []string {
 	if list := os.Getenv("DEJA_ROO_ROOTS"); list != "" {

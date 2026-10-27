@@ -70,6 +70,10 @@ func CopilotChatRoots() []string {
 	return out
 }
 
+// CopilotChatDefaultRoot is VS Code's User directory, where Copilot Chat keeps
+// its sessions, for a report to name on a machine that has no editor yet.
+func CopilotChatDefaultRoot() string { return vsCodeUserDir("Code") }
+
 // CopilotChatSessionFiles lists every Copilot Chat session file.
 func CopilotChatSessionFiles() []string {
 	var files []string

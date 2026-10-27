@@ -4,6 +4,8 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"runtime"
+	"slices"
 	"strings"
 	"testing"
 )
@@ -180,5 +182,58 @@ insert into part values ('p-assistant', 'm-assistant', '{"type":"text","text":"t
 	}
 	if !found {
 		t.Error("the reply from the database is missing")
+	}
+}
+
+// `deja sources` names these defaults on a machine with no editor yet (#5638),
+// so each has to be the directory its reader picks up once the editor writes
+// it, not a path deja would never look in.
+func TestVSCodeDefaultRootsAreWhereTheReadersLook(t *testing.T) {
+	cases := []struct {
+		name  string
+		env   string
+		def   func() string
+		roots func() []string
+		under []string // below VS Code's User directory
+	}{
+		{"copilot-chat", "DEJA_COPILOT_CHAT_ROOTS", CopilotChatDefaultRoot, CopilotChatRoots, nil},
+		{"roo", "DEJA_ROO_ROOTS", RooDefaultRoot, RooRoots, []string{"globalStorage", "rooveterinaryinc.roo-cline"}},
+		{"kilocode", "DEJA_KILO_ROOTS", KiloDefaultRoot, KiloRoots, []string{"globalStorage", "kilocode.kilo-code"}},
+	}
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			home := t.TempDir()
+			t.Setenv("HOME", home)
+			t.Setenv("USERPROFILE", home)
+			t.Setenv("XDG_CONFIG_HOME", "")
+			t.Setenv("APPDATA", "")
+			t.Setenv(tc.env, "")
+
+			// The stable "Code" host, where each platform keeps it.
+			user := filepath.Join(home, ".config", "Code", "User")
+			switch runtime.GOOS {
+			case "darwin":
+				user = filepath.Join(home, "Library", "Application Support", "Code", "User")
+			case "windows":
+				user = filepath.Join(home, "AppData", "Roaming", "Code", "User")
+			}
+			want := filepath.Join(append([]string{user}, tc.under...)...)
+			def := tc.def()
+			if def != want {
+				t.Fatalf("default root = %q, want %q", def, want)
+			}
+			if !strings.HasPrefix(def, home) {
+				t.Fatalf("default root %q is not under the home %q", def, home)
+			}
+			if slices.Contains(tc.roots(), def) {
+				t.Fatalf("roots already list %q before it exists", def)
+			}
+			if err := os.MkdirAll(def, 0o755); err != nil {
+				t.Fatal(err)
+			}
+			if got := tc.roots(); !slices.Contains(got, def) {
+				t.Fatalf("roots = %v, want them to include the default %q once it exists", got, def)
+			}
+		})
 	}
 }

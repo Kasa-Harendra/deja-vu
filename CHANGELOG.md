@@ -62,6 +62,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- `deja sources` names a location for `copilot-chat`, `roo`, `kilocode` and
+  `cherrystudio` on a machine where they are not installed yet. Those rows
+  printed an empty column; each now names the directory deja reads once the
+  editor or app creates it: VS Code's `User` directory, the extension's
+  `globalStorage` directory, and Cherry Studio's default store (#5638).
 - Three hook regressions found by replaying 333 real events against v0.23.1.
   A failure that matches another session's only on a shell parse error no
   longer gets that session's next command as a hint (unrelated hints 3 of 60

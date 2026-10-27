@@ -4077,6 +4077,16 @@ func printSources(dir string) {
 	printSourcesTo(os.Stdout, dir)
 }
 
+// rootsOrDefault names the roots deja found, or the default one when none
+// exists yet, so a row never has an empty location: someone who installs the
+// harness later can see where its history should appear (#5638).
+func rootsOrDefault(roots []string, def string) string {
+	if len(roots) == 0 {
+		return def
+	}
+	return strings.Join(roots, string(os.PathListSeparator))
+}
+
 func printSourcesTo(w io.Writer, dir string) {
 	redactions := map[string]int{}
 	if red, err := index.Redactions(dir); err == nil {
@@ -4130,11 +4140,11 @@ func printSourcesTo(w io.Writer, dir string) {
 		{"goose", filepath.Join(sources.GooseRoot(), "sessions"), sources.GooseSessionsDirs(), sources.GooseSessionFiles, sources.LoadGoose},
 		{"hermes", sources.HermesProfilesRoot(), []string{sources.HermesProfilesRoot()}, sources.HermesSessionFiles, sources.LoadHermes},
 		{"copilot", sources.CopilotRoot(), []string{sources.CopilotRoot()}, sources.CopilotSessionFiles, sources.LoadCopilot},
-		{"copilot-chat", strings.Join(sources.CopilotChatRoots(), string(os.PathListSeparator)), sources.CopilotChatRoots(), sources.CopilotChatSessionFiles, sources.LoadCopilotChat},
+		{"copilot-chat", rootsOrDefault(sources.CopilotChatRoots(), sources.CopilotChatDefaultRoot()), sources.CopilotChatRoots(), sources.CopilotChatSessionFiles, sources.LoadCopilotChat},
 		{"cline", sources.ClineSessionsDir(), append([]string{sources.ClineSessionsDir()}, sources.ClineLegacyRoots()...), sources.ClineSessionFiles, sources.LoadCline},
-		{"roo", strings.Join(sources.RooRoots(), string(os.PathListSeparator)), sources.RooRoots(), sources.RooTaskFiles, sources.LoadRoo},
-		{"kilocode", strings.Join(sources.KiloRoots(), string(os.PathListSeparator)), sources.KiloRoots(), sources.KiloSessionFiles, sources.LoadKilo},
-		{"cherrystudio", strings.Join(sources.CherryStudioAllRoots(), string(os.PathListSeparator)), sources.CherryStudioAllRoots(), sources.CherryStudioSessionFiles, sources.LoadCherryStudio},
+		{"roo", rootsOrDefault(sources.RooRoots(), sources.RooDefaultRoot()), sources.RooRoots(), sources.RooTaskFiles, sources.LoadRoo},
+		{"kilocode", rootsOrDefault(sources.KiloRoots(), sources.KiloDefaultRoot()), sources.KiloRoots(), sources.KiloSessionFiles, sources.LoadKilo},
+		{"cherrystudio", rootsOrDefault(sources.CherryStudioAllRoots(), sources.CherryStudioDefaultRoot()), sources.CherryStudioAllRoots(), sources.CherryStudioSessionFiles, sources.LoadCherryStudio},
 		{"kiro", sources.KiroRoot(), []string{sources.KiroRoot()}, sources.KiroSessionFiles, sources.LoadKiro},
 		{"senpi", sources.SenpiRoot(), []string{sources.SenpiRoot()}, sources.SenpiSessionFiles, sources.LoadSenpi},
 		{"kimchi", sources.KimchiRoot(), []string{sources.KimchiRoot()}, sources.KimchiSessionFiles, sources.LoadKimchi},

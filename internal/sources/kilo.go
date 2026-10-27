@@ -33,6 +33,12 @@ import (
 // KiloExtensionID is the publisher and name of the VS Code extension.
 const KiloExtensionID = "kilocode.kilo-code"
 
+// KiloDefaultRoot is the extension's globalStorage directory in VS Code, for a
+// report to name on a machine where Kilo Code is not installed yet.
+func KiloDefaultRoot() string {
+	return filepath.Join(vsCodeUserDir("Code"), "globalStorage", KiloExtensionID)
+}
+
 // KiloRoots are the globalStorage directories the extension may write to, in
 // the same host order as RooRoots. DEJA_KILO_ROOTS replaces the list.
 func KiloRoots() []string {
