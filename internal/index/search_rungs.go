@@ -137,14 +137,33 @@ func noPostingsLadder(ranking *relevanceOnce, dir string, m Manifest, o query.Op
 		return res, err
 	}
 	ranked, rerr := ranking.get(dir, m, o)
-	if rerr != nil || len(ranked.Sessions) > 0 {
-		return ranked, rerr
+	if res, err := orLoneWord(dir, m, o, ranked, rerr); err != nil || len(res.Sessions) > 0 {
+		return res, err
 	}
 	// Nothing anywhere. The neighbour map holds the one link left to
 	// try — the project's own word for what the reader asked about —
 	// and asking it over the question's identifying words is what
-	// makes it readable by a sentence (#2331).
+	// makes it readable by a sentence (#2331). After the lone word: the
+	// word the reader typed is a closer answer than the project's word
+	// for it.
 	return cooccurNarrowedSearch(dir, m, o)
+}
+
+// orLoneWord answers, when the rungs above found nothing at all, a question
+// of two words one of which no session holds on the other word
+// (loneWordSearch). It never replaces a page an earlier rung could give.
+func orLoneWord(dir string, m Manifest, o query.Options, res SearchResult, err error) (SearchResult, error) {
+	if err != nil || len(res.Sessions) > 0 {
+		return res, err
+	}
+	lone, lerr := loneWordSearch(dir, m, o)
+	if lerr != nil {
+		return SearchResult{}, fmt.Errorf("lone word postings: %w", lerr)
+	}
+	if !lone.Stemmed {
+		return res, nil
+	}
+	return lone, nil
 }
 
 // wordLadder tries the stem, fuzzy, co-occurrence and error-signature rungs in

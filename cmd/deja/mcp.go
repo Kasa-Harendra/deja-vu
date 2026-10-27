@@ -1645,7 +1645,7 @@ type rankedRecall struct {
 // same ranking, so the two surfaces cannot disagree about what is relevant.
 func rankRecall(dir, q, harness, project string, window int) (rankedRecall, error) {
 	live, cut := liveLineageCut(dir)
-	o := search.Options{Query: nfcfold.Compose(q), Harness: harness, All: true, RecallWorn: usage.WornSessions(dir), ExcludeSessions: live, ExcludeUpTo: cut, Window: window, Activation: policy.ActivationMCP}
+	o := search.Options{Query: nfcfold.Compose(q), Harness: harness, All: true, RecallWorn: usage.WornSessions(dir), ExcludeSessions: live, ExcludeUpTo: cut, Window: window, Activation: policy.ActivationMCP, LoneWord: true}
 	cov, err := index.EnsureForSearchCoverage(dir, o, mcpProgress())
 	if err != nil {
 		return rankedRecall{}, err
@@ -1697,6 +1697,9 @@ func rankRecall(dir, q, harness, project string, window int) (rankedRecall, erro
 	if len(scope) > 0 {
 		po := o
 		po.Projects, po.PoolScope = scope, nil
+		// The project falls back to one word of two only where the machine
+		// did too: otherwise its guess would replace the machine's answer.
+		po.LoneWord = o.LoneWord && (len(hits) == 0 || dropsAWord(result.Variants))
 		// Cut from the machine's search when that one read everything the
 		// project's would: a second search of a word most sessions hold
 		// cost as much again (#5486). And not run at all where no session
@@ -1795,6 +1798,10 @@ func recallPage(dir, q string, budget, offset, limit, total, demoted int, about 
 	if absent {
 		namesTheAsked = false
 	}
+	lone := result.LoneWord && absent
+	if lone && len(hits) > loneWordPageHits {
+		hits = hits[:loneWordPageHits]
+	}
 	// Coverage settles what the two readings above cannot: a session holding
 	// most of a long query is an answer in part even when a word was dropped
 	// or the query's rarest word is one nothing holds.
@@ -1815,7 +1822,11 @@ func recallPage(dir, q string, budget, offset, limit, total, demoted int, about 
 		headerRoom += len("about ")
 	}
 	for i, h := range hits {
-		writeRecallHitHead(&hb, h, i, twins)
+		if lone {
+			writeLoneWordHit(&hb, h, i)
+		} else {
+			writeRecallHitHead(&hb, h, i, twins)
+		}
 		// Under the best hit only, and only when there is budget left: the
 		// excerpts say where the query words appear, which is not the same as
 		// what the session concluded. An agent had to open the session to learn
@@ -1823,7 +1834,7 @@ func recallPage(dir, q string, budget, offset, limit, total, demoted int, about 
 		// so the common case — "did we solve this before?" — is answered in the
 		// recall itself. Later hits stay excerpt-only; they are candidates to
 		// choose between, not answers.
-		if i == 0 {
+		if i == 0 && !lone {
 			writeRecallConclusions(&hb, dir, q, h, o, budget, headerRoom, len(hits) > 1)
 		}
 		served++
@@ -2034,6 +2045,31 @@ func writeFormsLine(b *strings.Builder, result index.SearchResult) {
 
 // writeRecallHitHead writes one hit's header, its marks and its excerpts.
 func writeRecallHitHead(hb *strings.Builder, h search.Hit, i int, twins map[string][]string) {
+	writeRecallHitLine(hb, h, i)
+	if line := lifecycleLine(h); line != "" {
+		fmt.Fprintf(hb, "%s\n", line)
+	}
+	writeRecallHitMarks(hb, h, twins)
+}
+
+// loneWordPageHits is how many sessions a page answered on one word of two
+// shows (#5711). They are leads the header already calls nobody's answer, so
+// the page names a few and quotes one line of each.
+const loneWordPageHits = 3
+
+// writeLoneWordHit is a hit on such a page: its line and one excerpt.
+func writeLoneWordHit(hb *strings.Builder, h search.Hit, i int) {
+	writeRecallHitLine(hb, h, i)
+	for _, sn := range h.Snippets {
+		if !strings.HasPrefix(sn, search.UserRuleLabel) {
+			fmt.Fprintf(hb, "- %s\n", recallListingLine(sn))
+			return
+		}
+	}
+}
+
+// writeRecallHitLine is a hit's numbered line: where, which, how many, when.
+func writeRecallHitLine(hb *strings.Builder, h search.Hit, i int) {
 	fmt.Fprintf(hb, "\n%d. [%s] %s · %s · %s", i+1,
 		recallListingLine(h.Session.Harness), recallListingLine(h.Session.Project), recallListingLine(h.Session.ID), search.MatchCount(h.Count))
 	// A session with no user turn is the agent's own words, and the lines
@@ -2049,9 +2085,11 @@ func writeRecallHitHead(hb *strings.Builder, h search.Hit, i int, twins map[stri
 		fmt.Fprintf(hb, " · reused %d×", h.Reused)
 	}
 	fmt.Fprintln(hb)
-	if line := lifecycleLine(h); line != "" {
-		fmt.Fprintf(hb, "%s\n", line)
-	}
+}
+
+// writeRecallHitMarks writes a hit's bracketed notes, the person's rules and
+// its excerpts.
+func writeRecallHitMarks(hb *strings.Builder, h search.Hit, twins map[string][]string) {
 	// A session that says it backed an approach out carries a signal the
 	// lifecycle states would carry if anyone set them by hand — on a real
 	// 1160-session store not one did. The wording tells the agent an
@@ -2799,6 +2837,16 @@ func mcpProgress() io.Writer {
 		return os.Stderr
 	}
 	return io.Discard
+}
+
+// dropsAWord is whether the search answered without one of the query's words.
+func dropsAWord(variants map[string][]string) bool {
+	for _, values := range variants {
+		if slices.Contains(values, "") {
+			return true
+		}
+	}
+	return false
 }
 
 func fuzzySummary(variants map[string][]string) []string {
