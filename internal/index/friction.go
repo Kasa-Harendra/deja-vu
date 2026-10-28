@@ -565,9 +565,6 @@ var frictionPhrases = []string{
 // not name one there.
 var noSuchTableRE = regexp.MustCompile(`no such table:\s*\S`)
 
-// FrictionHash is frictionHash for callers outside the package.
-func FrictionHash(line string) uint64 { return frictionHash(line) }
-
 func frictionHash(line string) uint64 {
 	// Masked here rather than in FrictionLine: the numbers a machine hands out
 	// must not split one failure into a wall per run, and the line a reader is
