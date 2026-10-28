@@ -6,8 +6,8 @@ Issues labelled [good first issue](https://github.com/vshulcz/deja-vu/labels/goo
 are bounded, and each one names the case it is wrong on, so you can reproduce
 before you change anything.
 
-Outside pull requests so far: 116 merged of 128 from 47 people, median 5.2 hours
-from opening to merge, the slowest two days, none left open. If yours sits
+Outside pull requests so far: 205 merged of 234 from 86 people, median 6.2 hours
+from opening to merge, the slowest six days, none left open. If yours sits
 longer than that, something went wrong on our side — say so in the thread.
 
 ## Build and test
@@ -18,6 +18,7 @@ request, run:
 ```sh
 go test ./... -race -count=1
 go vet ./...
+golangci-lint run
 go build ./cmd/deja
 ```
 
@@ -35,10 +36,10 @@ go test ./internal/sources/ -coverprofile=coverage.out
 go tool cover -func=coverage.out
 ```
 
-Replace `internal/sources` with each package changed. CI prints only the
-aggregate number, so the two commands above are how you check the figure review
-actually looks at — run them before opening the PR and there will be no
-surprises. Do not add low-value tests only to move the number; explain a
+Replace `internal/sources` with each package changed. CI prints each
+package's figure beside its floor only after the whole suite has run, so the
+two commands above are the quicker check — run them before opening the PR and
+there will be no surprises. Do not add low-value tests only to move the number; explain a
 genuinely unreachable branch in the pull request instead.
 
 ## Hermetic tests
