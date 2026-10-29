@@ -217,7 +217,14 @@ func installKiroAuto(exe string, uninstall bool) (installResult, error) {
 	if uninstall {
 		pruneCreatedDir(filepath.Dir(kiroSettingsPath()))
 	}
+	status, err := installForkStatusItemIfPresent("Kiro", ".kiro", exe, uninstall)
+	if err != nil {
+		return installResult{}, err
+	}
 	out := wroteAll(base, agent)
+	if status.Path != "" {
+		out = wroteAll(out, status)
+	}
 	if !uninstall {
 		out.Note = joinNotes(out.Note, kiroAutoNote)
 	}

@@ -692,6 +692,13 @@ func installAntigravityAuto(exe string, uninstall bool) (installResult, error) {
 	if err != nil {
 		return installResult{}, err
 	}
+	ideStatus, err := installForkStatusItemIfPresent("Antigravity", ".antigravity", exe, uninstall)
+	if err != nil {
+		return installResult{}, err
+	}
+	if ideStatus.Path != "" {
+		return wroteAll(mcp, plugin, status, ideStatus), nil
+	}
 	return wroteAll(mcp, plugin, status), nil
 }
 
@@ -805,6 +812,13 @@ func installCursorAuto(exe string, uninstall bool) (installResult, error) {
 	status, err := installCursorStatusline(exe, uninstall)
 	if err != nil {
 		return installResult{}, err
+	}
+	ideStatus, err := installForkStatusItemIfPresent("Cursor", ".cursor", exe, uninstall)
+	if err != nil {
+		return installResult{}, err
+	}
+	if ideStatus.Path != "" {
+		return wroteAll(mcp, hooks, status, ideStatus), nil
 	}
 	return wroteAll(mcp, hooks, status), nil
 }
