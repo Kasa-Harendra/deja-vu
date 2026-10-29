@@ -6,10 +6,6 @@ Issues labelled [good first issue](https://github.com/vshulcz/deja-vu/labels/goo
 are bounded, and each one names the case it is wrong on, so you can reproduce
 before you change anything.
 
-Outside pull requests so far: 205 merged of 234 from 86 people, median 6.2 hours
-from opening to merge, the slowest six days, none left open. If yours sits
-longer than that, something went wrong on our side — say so in the thread.
-
 ## Build and test
 
 deja requires Go 1.25 and has no runtime Go dependencies. Before opening a pull
@@ -81,12 +77,6 @@ input, and incremental behavior where the format is append-only. Add an index
 integration test and install/doctor coverage when those commands recognize the
 harness.
 
-Wiring a harness is not the same as finishing one. What "finished" means here —
-the memory reaching the model rather than the hook merely running, what it is
-allowed to cost, and the traps that have wasted time before — is written down in
-[`.claude/commands/harness.md`](.claude/commands/harness.md), which is also a
-slash command if you work in this repository with Claude Code.
-
 If an upstream format changed, use the
 [format drift report](https://github.com/vshulcz/deja-vu/issues/new?template=format-drift.yml).
 For a new harness, use the
@@ -100,16 +90,11 @@ before contributing real session data.
 - Do not commit private history, generated local indexes, or machine-specific logs.
 - No CLA.
 
-The Windows leg is opt-in per pull request: it runs on every push to `main`, on
-the weekly canary, on a request carrying the `windows` label, and on any branch
-touching the paths that have broken it before (`internal/sources`,
-`internal/index`, `docs/registry`, parts of `cmd/deja` and the workflow itself),
-which the workflow labels for you. Anything about paths, printed output or the
-filesystem wants that label, because the alternative is finding out on `main`.
-Assertions about file permissions want more than the label: a directory mode bit
-denies nothing on Windows or to root, so a test that needs an unwritable
-directory has to build the failure some other way — a regular file where the
-parent directory should be fails everywhere.
+The Windows suite runs on `main`, on the weekly canary, and on pull requests
+that touch filesystem, parser or installer paths (or carry the `windows` label).
+Note that a directory mode bit (`chmod 0500`) denies nothing on Windows or to
+root; a test that needs an unwritable path should place a regular file where the
+parent directory would be, which fails consistently on every platform.
 
 A pull request is ready to merge when CI is green, affected packages meet the
 coverage bar, tests are hermetic on supported platforms, documentation matches
