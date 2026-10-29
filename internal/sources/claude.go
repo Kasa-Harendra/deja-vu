@@ -122,6 +122,12 @@ func LoadClaude() []model.Session {
 			}
 		}
 	}
+	if cm := ClaudeMemDBPath(); cm != "" {
+		if fi, err := os.Stat(cm); err == nil && fi.Mode().IsRegular() {
+			cmSS, err := ParseClaudeMemDB(cm)
+			ss = append(ss, storeRead(cm, cmSS, err)...)
+		}
+	}
 	return ss
 }
 
@@ -131,6 +137,11 @@ func ClaudeFiles() []string {
 	out := claudeTranscriptFiles()
 	if hist := ClaudeHistoryFile(); hist != "" && fileExists(hist) {
 		out = append(out, hist)
+	}
+	if cm := ClaudeMemDBPath(); cm != "" {
+		if fi, err := os.Stat(cm); err == nil && fi.Mode().IsRegular() {
+			out = append(out, cm)
+		}
 	}
 	return out
 }
@@ -166,6 +177,9 @@ func ClaudeSidecarFiles() []string {
 // and the stats and the cc-mirror listing per file were most of the time a
 // command spent on 27,000 sessions before it searched.
 func UnderClaudeRoot(p string) bool {
+	if cm := ClaudeMemDBPath(); cm != "" && filepath.Clean(p) == filepath.Clean(cm) {
+		return true
+	}
 	if r := os.Getenv("DEJA_CLAUDE_ROOT"); r != "" {
 		return strings.HasPrefix(p, r)
 	}
@@ -306,6 +320,9 @@ func ParseClaudeFileFromOffset(path string, offset int64) ([]model.Session, erro
 }
 
 func parseClaudeFileFromOffset(path string, offset int64) ([]model.Session, error) {
+	if IsClaudeMemDB(path) || filepath.Base(path) == "claude-mem.db" {
+		return ParseClaudeMemDB(path)
+	}
 	return parseClaudeTypedFromOffset(path, offset)
 }
 
