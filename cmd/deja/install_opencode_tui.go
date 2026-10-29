@@ -62,16 +62,29 @@ const tui = async (api) => {
     offs.forEach((off) => off())
   })
   const view = (ctx) => <text fg={ctx.theme.current.textMuted}>{line()}</text>
+  const short = (ctx) => {
+    const max = (process.stdout?.columns || 80) < 100 ? 2 : 3
+    return <text fg={ctx.theme.current.textMuted}>{line().split(" · ").slice(0, max).join(" · ")}</text>
+  }
   api.slots.register({
-    order: 50,
+    order: 150,
     slots: {
       sidebar_content(ctx, props) {
         follow(props?.session_id)
-        return view(ctx)
+        const parts = line().replace(/^deja\s*·\s*/, "").split(" · ").filter(Boolean)
+        if (!parts.length) return view(ctx)
+        return (
+          <box>
+            <text fg={ctx.theme.current.text}><b>deja</b></text>
+            {parts.map((p) => (
+              <text fg={ctx.theme.current.textMuted}>{p.length > 36 ? p.slice(0, 35) + "…" : p}</text>
+            ))}
+          </box>
+        )
       },
       session_prompt_right(ctx, props) {
         follow(props?.session_id)
-        return view(ctx)
+        return short(ctx)
       },
       home_bottom(ctx) {
         return view(ctx)
@@ -106,7 +119,8 @@ export default {
           if (!err) setLine(String(out).split("\n")[0].trim())
         })
         child.stdin?.on("error", () => {})
-        child.stdin?.end(JSON.stringify({ session_id: sid }) + "\n")
+        const width = Math.max(24, Math.min(72, (process.stdout?.columns || 80) - 24))
+        child.stdin?.end(JSON.stringify({ session_id: sid, width }) + "\n")
       } catch {}
     }
     const view = () => <text fg={ctx.theme.text.muted}>{line()}</text>

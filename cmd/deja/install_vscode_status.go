@@ -101,7 +101,8 @@ function activate(context) {
           item.hide();
           return;
         }
-        item.text = line;
+        item.tooltip = line;
+        item.text = line.split(" · ").slice(0, 3).join(" · ");
         item.show();
       });
     } catch {

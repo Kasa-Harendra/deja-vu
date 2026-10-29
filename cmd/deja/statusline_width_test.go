@@ -147,3 +147,28 @@ func TestStatuslineNarrowBarKeepsAReadableTitle(t *testing.T) {
 		t.Errorf("title cut to %d runes, below the floor of %d: %q", got, statuslineMinTitle, line)
 	}
 }
+
+// Standalone usage lines (when no file memory applies) also have to fit the
+// bar: the full four-part line with "less than replaying" is 87+ columns and
+// wrapped on an 80-column bar (#5756).
+func TestStandaloneUsageFitsTheBar(t *testing.T) {
+	full := "deja · 38 recalls · 163.4 KB ctx today · 219.7 KB injected · ~1388× less than replaying"
+	for _, tc := range []struct {
+		width int
+		want  string
+	}{
+		{100, full},
+		{80, "deja · 38 recalls · 163.4 KB ctx today · 219.7 KB injected · ~1388×"},
+		{60, "deja · 38 recalls · 163.4 KB ctx today · 219.7 KB injected"},
+		{45, "deja · 38 recalls · 163.4 KB ctx today"},
+		{25, "deja · 38 recalls"},
+	} {
+		got := fitUsage(full, tc.width)
+		if got != tc.want {
+			t.Errorf("fitUsage(%d) = %q, want %q", tc.width, got, tc.want)
+		}
+		if visibleLen(got) > tc.width {
+			t.Errorf("fitUsage(%d) is %d columns: %q", tc.width, visibleLen(got), got)
+		}
+	}
+}

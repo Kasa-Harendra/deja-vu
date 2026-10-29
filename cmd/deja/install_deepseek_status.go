@@ -153,7 +153,7 @@ window.__ModuleLoader__.load({
         "data-deja-status": true,
         title: line,
         style: { fontSize: "12px", opacity: 0.7, padding: "2px 8px", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" },
-        children: line,
+        children: line.split(" · ").slice(0, 3).join(" · "),
       });
     }
 

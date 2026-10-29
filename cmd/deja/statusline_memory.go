@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"os"
 	"path/filepath"
 	"slices"
 	"sort"
@@ -37,6 +38,7 @@ type transcriptSource struct {
 	TranscriptPath string `json:"transcript_path"`
 	SessionID      string `json:"session_id"`
 	KimiSessionID  string `json:"sessionId"`
+	Width          int    `json:"width"`
 }
 
 // statuslineMaxTitle keeps the memory segment from pushing the usage numbers
@@ -336,11 +338,11 @@ func memorySegment(m fileMemory, width int) string {
 // off the edge loses its tail — which would be the numbers if they came
 // second, but the memory if the line simply grew.
 func withFileMemory(dir string, in transcriptSource, usage string) string {
+	width := statuslineWidthFor(in)
 	m, ok := statuslineMemory(dir, in)
 	if !ok {
-		return usage
+		return fitUsage(usage, width)
 	}
-	width := statuslineWidth()
 	// The per-component caps never added up to a line anyone measured: 28 for
 	// the name and 38 for the title made a memory segment of up to 95 columns
 	// on its own, so the half this function deliberately puts first was itself
@@ -362,6 +364,46 @@ func withFileMemory(dir string, in transcriptSource, usage string) string {
 	return mem
 }
 
+// fitUsage shortens a standalone usage line to fit a bar of the given width,
+// stepping down from the full line through its compact ratio form and then
+// dropping trailing segments one by one (#5756).
+func fitUsage(usage string, width int) string {
+	if barColumns(usage) <= width {
+		return usage
+	}
+	const prefix = "deja · "
+	if !strings.HasPrefix(usage, prefix) {
+		return usage
+	}
+	if trimmed, ok := strings.CutSuffix(usage, " less than replaying"); ok {
+		if barColumns(trimmed) <= width {
+			return trimmed
+		}
+	}
+	parts := strings.Split(strings.TrimPrefix(usage, prefix), " · ")
+	if len(parts) == 2 && parts[0] == "no recalls yet today" && strings.HasSuffix(parts[1], " injected") && parts[1] != "0 B injected" {
+		if cand := prefix + parts[1]; barColumns(cand) <= width {
+			return cand
+		}
+	}
+	for n := len(parts) - 1; n >= 1; n-- {
+		cand := prefix + strings.Join(parts[:n], " · ")
+		if barColumns(cand) <= width {
+			return cand
+		}
+		if last, _, ok := strings.Cut(parts[n-1], ", "); ok {
+			head := append(slices.Clone(parts[:n-1]), last)
+			if cand := prefix + strings.Join(head, " · "); barColumns(cand) <= width {
+				return cand
+			}
+		}
+	}
+	if first := firstUsageFact(usage); first != "" {
+		return prefix + first
+	}
+	return usage
+}
+
 // firstUsageFact is the usage segment cut to its leading fact — the recall
 // count — for a bar with room for that and no more.
 func firstUsageFact(usage string) string {
@@ -380,6 +422,13 @@ func barColumns(s string) int { return termwidth.Columns(ansiRE.ReplaceAllString
 // no dependency may be added to read the real size, 80 is wrong least often,
 // and COLUMNS is honoured for the readers who export it.
 func statuslineWidth() int { return briefWidth() }
+
+func statuslineWidthFor(in transcriptSource) int {
+	if os.Getenv("COLUMNS") == "" && in.Width >= 20 && in.Width <= 400 {
+		return in.Width
+	}
+	return statuslineWidth()
+}
 
 // shortenUsage keeps the first two facts — how many recalls and how much
 // context — and drops the derived ones.
