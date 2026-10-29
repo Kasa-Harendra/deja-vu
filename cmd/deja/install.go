@@ -24,6 +24,7 @@ import (
 	"github.com/vshulcz/deja-vu/internal/model"
 	"github.com/vshulcz/deja-vu/internal/policy"
 	"github.com/vshulcz/deja-vu/internal/sources"
+	"github.com/vshulcz/deja-vu/internal/usage"
 )
 
 type installResult struct {
@@ -193,6 +194,11 @@ func runInstall(dir string, args []string, uninstall bool) error {
 	}
 	if banner && wired {
 		printInstallBanner(dir, ir.done, targetArgs[0] == "--all")
+	}
+	if n := usage.StatusCounters(dir); !uninstall {
+		if tip := maybeStarTip(dir, n.Recalls+n.Injected); tip != "" {
+			fmt.Fprintf(os.Stderr, "\ndeja has answered %d recalls on this machine — if it helps: gh repo star vshulcz/deja-vu\n", n.Recalls+n.Injected)
+		}
 	}
 	return refusal
 }
