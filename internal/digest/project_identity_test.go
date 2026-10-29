@@ -116,3 +116,29 @@ func TestProjectNameCandidatesKeepTheOldNamesAfterTheAlias(t *testing.T) {
 		t.Errorf("the main checkout outside the tree took the alias: %v", names)
 	}
 }
+
+// Standing in $HOME or at / is not standing in a project: naming the home
+// directory after its user ("Users/alice", "alice") grouped every one-off
+// session run from ~ into one project and injected them into the next session
+// started there (#5750).
+func TestProjectNameCandidatesSkipsHomeAndRoot(t *testing.T) {
+	home := filepath.Join(t.TempDir(), "alice")
+	if err := os.MkdirAll(home, 0o755); err != nil {
+		t.Fatal(err)
+	}
+	t.Setenv("HOME", home)
+	t.Setenv("USERPROFILE", home)
+
+	for _, dir := range []string{"", ".", "/", home} {
+		if got := ProjectNameCandidates(dir); len(got) != 0 {
+			t.Errorf("ProjectNameCandidates(%q) = %v, want nil", dir, got)
+		}
+	}
+	sub := filepath.Join(home, "coding", "app")
+	if err := os.MkdirAll(sub, 0o755); err != nil {
+		t.Fatal(err)
+	}
+	if got := ProjectNameCandidates(sub); !slices.Contains(got, "coding/app") || slices.Contains(got, "alice") {
+		t.Errorf("ProjectNameCandidates(%q) = %v, want coding/app without the home name", sub, got)
+	}
+}
