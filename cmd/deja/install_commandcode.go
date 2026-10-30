@@ -163,7 +163,7 @@ export default function (cmd: any) {
   const recalls = new Map<string, string>()
   const status = () => {
     try {
-      cmd.ui.setStatus(run(["statusline"], "", 2000) || null)
+      cmd.ui.setStatus(run(["statusline"], "", 2000).split(" · ").slice(0, 3).join(" · ") || null)
     } catch {}
   }
   cmd.on("run_start", (event: any) => {

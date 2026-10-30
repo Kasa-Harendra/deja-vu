@@ -67,6 +67,13 @@ func installWindsurf(exe string, uninstall bool) (installResult, error) {
 	if err != nil {
 		return installResult{}, err
 	}
+	status, err := installForkStatusItemIfPresent("Windsurf", ".windsurf", exe, uninstall)
+	if err != nil {
+		return installResult{}, err
+	}
+	if status.Path != "" {
+		return wroteAll(mcp, rules, skill, status), nil
+	}
 	return wroteAll(mcp, rules, skill), nil
 }
 

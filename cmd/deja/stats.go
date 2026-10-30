@@ -290,11 +290,11 @@ func runStats(dir string, args []string) error {
 	if fi, e := os.Stat(embed.Path(dir)); e == nil {
 		report.SidecarSize = fi.Size()
 	}
-	return writeStatsReport(report, ss, a, sshTip)
+	return writeStatsReport(dir, report, ss, a, sshTip)
 }
 
 // writeStatsReport prints the report in the form that was asked for.
-func writeStatsReport(report stats.Report, ss []model.Session, a statsArgs, sshTip string) error {
+func writeStatsReport(dir string, report stats.Report, ss []model.Session, a statsArgs, sshTip string) error {
 	jsonOut, card, cardPath, htmlPath, options := a.jsonOut, a.card, a.cardPath, a.htmlPath, a.options
 	if card && cardPath == "" {
 		printStatsCard(os.Stdout, report)
@@ -336,6 +336,9 @@ func writeStatsReport(report stats.Report, ss []model.Session, a statsArgs, sshT
 	// Only where there is something worth a picture.
 	if report.TotalSessions > 0 {
 		fmt.Fprintln(os.Stdout, "\n  As a card        deja stats --card")
+		if tip := maybeStarTip(dir, report.Recall.Recalls+report.Recall.Injections); tip != "" {
+			fmt.Fprintln(os.Stdout, tip)
+		}
 	}
 	if sshTip != "" {
 		fmt.Fprintln(os.Stdout, sshTip)

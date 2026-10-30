@@ -125,7 +125,7 @@ export default function extension(pi) {
       const status = run(["warmup-status"], "");
       // omp keeps a footer line, so a first index that is still building is
       // visible instead of looking like memory that does not work.
-      ctx.ui.setStatus("deja", status || run(["statusline"], ""));
+      ctx.ui.setStatus("deja", status || run(["statusline"], "").split(" · ").slice(0, 3).join(" · "));
     } catch {}
   });
 
@@ -180,7 +180,7 @@ export default function extension(pi) {
       // Without the receipt the recall is invisible and reads as the model
       // guessing; with it the user knows where the answer came from.
       if (receipt) ctx.ui.notify(receipt, "info");
-      const stats = run(["statusline"], "");
+      const stats = run(["statusline"], "").split(" · ").slice(0, 3).join(" · ");
       if (stats) ctx.ui.setStatus("deja", stats);
       return { message: { customType: "deja-recall", content: digest, display: false } };
     } catch {}

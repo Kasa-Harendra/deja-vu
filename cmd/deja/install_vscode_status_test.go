@@ -69,3 +69,39 @@ func TestVSCodeURIPath(t *testing.T) {
 		t.Errorf("linux: %q", got)
 	}
 }
+
+func TestVSCodeForkStatusItemInstallsAndUninstallsCleanly(t *testing.T) {
+	hermeticEnv(t)
+	for _, tc := range []struct {
+		target    string
+		dotFolder string
+	}{
+		{"cursor-auto", ".cursor"},
+		{"windsurf", ".windsurf"},
+		{"kiro-auto", ".kiro"},
+		{"antigravity-auto", ".antigravity"},
+		{"trae-ide-auto", ".trae"},
+	} {
+		extDir := filepath.Join(sources.Home(), tc.dotFolder, "extensions")
+		if err := os.MkdirAll(extDir, 0o755); err != nil {
+			t.Fatal(err)
+		}
+		if _, err := installTarget(tc.target, "/opt/deja/bin/deja", false); err != nil {
+			t.Fatalf("%s install: %v", tc.target, err)
+		}
+		dir := filepath.Join(extDir, "vshulcz.deja-status-1.0.0")
+		if _, err := os.Stat(filepath.Join(dir, "extension.js")); err != nil {
+			t.Fatalf("%s did not write extension.js: %v", tc.target, err)
+		}
+		list := readRulesTestFile(t, filepath.Join(extDir, "extensions.json"))
+		if !strings.Contains(list, `"id":"vshulcz.deja-status"`) {
+			t.Fatalf("%s extensions.json = %s", tc.target, list)
+		}
+		if _, err := installTarget(tc.target, "/opt/deja/bin/deja", true); err != nil {
+			t.Fatalf("%s uninstall: %v", tc.target, err)
+		}
+		if _, err := os.Stat(dir); !os.IsNotExist(err) {
+			t.Fatalf("%s uninstall left the extension: %v", tc.target, err)
+		}
+	}
+}

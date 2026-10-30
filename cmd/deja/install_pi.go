@@ -546,7 +546,7 @@ export default function (pi: any) {
       const parent = parentID(ctx);
       if (!injected.has(sessionID()) && holdsRecall(ctx)) {
         injected.add(sessionID());
-        const stats = run(["statusline"], "");
+        const stats = run(["statusline"], "").split(" · ").slice(0, 3).join(" · ");
         if (stats) ctx.ui.setStatus("deja", stats);
       }
       if (!injected.has(sessionID())) {
@@ -573,7 +573,7 @@ export default function (pi: any) {
           if (receipt) ctx.ui.notify(receipt, "info");
           // pi keeps the footer until it is cleared, so the session carries a
           // quiet reminder that memory is on rather than a one-off toast.
-          const stats = run(["statusline"], "");
+          const stats = run(["statusline"], "").split(" · ").slice(0, 3).join(" · ");
           if (stats) ctx.ui.setStatus("deja", stats);
           // Marked, so a resume can tell the digest from a prompt's recall
           // (#5314).

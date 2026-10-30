@@ -403,7 +403,7 @@ export default function (amp: any) {
   let status: any = null
   const showStatus = () => {
     try {
-      const text = run(["statusline"], "", 2000)
+      const text = run(["statusline"], "", 2000).split(" · ").slice(0, 3).join(" · ")
       if (!text) return
       if (status) status.update({ text })
       else status = amp.createStatusItem({ text })

@@ -24,6 +24,7 @@ import (
 	"github.com/vshulcz/deja-vu/internal/model"
 	"github.com/vshulcz/deja-vu/internal/policy"
 	"github.com/vshulcz/deja-vu/internal/sources"
+	"github.com/vshulcz/deja-vu/internal/usage"
 )
 
 type installResult struct {
@@ -193,6 +194,11 @@ func runInstall(dir string, args []string, uninstall bool) error {
 	}
 	if banner && wired {
 		printInstallBanner(dir, ir.done, targetArgs[0] == "--all")
+	}
+	if n := usage.StatusCounters(dir); !uninstall {
+		if tip := maybeStarTip(dir, n.Recalls+n.Injected); tip != "" {
+			fmt.Fprintf(os.Stderr, "\ndeja has answered %d recalls on this machine — if it helps: gh repo star vshulcz/deja-vu\n", n.Recalls+n.Injected)
+		}
 	}
 	return refusal
 }
@@ -692,6 +698,13 @@ func installAntigravityAuto(exe string, uninstall bool) (installResult, error) {
 	if err != nil {
 		return installResult{}, err
 	}
+	ideStatus, err := installForkStatusItemIfPresent("Antigravity", ".antigravity", exe, uninstall)
+	if err != nil {
+		return installResult{}, err
+	}
+	if ideStatus.Path != "" {
+		return wroteAll(mcp, plugin, status, ideStatus), nil
+	}
 	return wroteAll(mcp, plugin, status), nil
 }
 
@@ -805,6 +818,13 @@ func installCursorAuto(exe string, uninstall bool) (installResult, error) {
 	status, err := installCursorStatusline(exe, uninstall)
 	if err != nil {
 		return installResult{}, err
+	}
+	ideStatus, err := installForkStatusItemIfPresent("Cursor", ".cursor", exe, uninstall)
+	if err != nil {
+		return installResult{}, err
+	}
+	if ideStatus.Path != "" {
+		return wroteAll(mcp, hooks, status, ideStatus), nil
 	}
 	return wroteAll(mcp, hooks, status), nil
 }
