@@ -6,10 +6,17 @@
   <link rel="alternate" type="text/html" href="https://vshulcz.github.io/deja-vu/"></link>
   <link rel="self" type="application/atom+xml" href="https://vshulcz.github.io/deja-vu/feed.xml"></link>
   <link rel="hub" href="https://pubsubhubbub.appspot.com/"></link>
-  <updated>2026-10-29T00:00:00Z</updated>
+  <updated>2026-10-31T00:00:00Z</updated>
   <author>
     <name>vshulcz</name>
   </author>
+  <entry>
+    <title>Add memory to Devin CLI: every agent&#39;s sessions — deja-vu</title>
+    <id>https://vshulcz.github.io/deja-vu/guide/memory-for-devin.html</id>
+    <link rel="alternate" type="text/html" href="https://vshulcz.github.io/deja-vu/guide/memory-for-devin.html"></link>
+    <updated>2026-10-31T00:00:00Z</updated>
+    <summary>How to give Devin CLI recall over every coding agent&#39;s sessions on the machine — the MCP server, the hooks on each prompt, and CLI install versus plugin.</summary>
+  </entry>
   <entry>
     <title>deja-vu: memory for Claude Code, Codex, Cursor &amp; 40 more</title>
     <id>https://vshulcz.github.io/deja-vu/</id>
@@ -282,12 +289,5 @@
     <link rel="alternate" type="text/html" href="https://vshulcz.github.io/deja-vu/guide/harnesses.html"></link>
     <updated>2026-10-23T00:00:00Z</updated>
     <summary>The forty-three coding agents deja indexes today, where each stores its history, and how to add a new one.</summary>
-  </entry>
-  <entry>
-    <title>Where coding agents store their history — session format registry</title>
-    <id>https://vshulcz.github.io/deja-vu/registry/README.html</id>
-    <link rel="alternate" type="text/html" href="https://vshulcz.github.io/deja-vu/registry/README.html"></link>
-    <updated>2026-10-23T00:00:00Z</updated>
-    <summary>Where Claude Code, Codex, Cursor, opencode and thirty-nine more coding agents keep their conversation history on disk, what is inside those files, and how each format drifts.</summary>
   </entry>
 </feed>
