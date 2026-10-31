@@ -130,6 +130,13 @@
     <summary>opencode keeps every session in one SQLite database. What the tables hold, how to remove a session, and why deleting rows does not free the space.</summary>
   </entry>
   <entry>
+    <title>Delete pi session history — deja-vu</title>
+    <id>https://vshulcz.github.io/deja-vu/guide/delete-pi-session-history.html</id>
+    <link rel="alternate" type="text/html" href="https://vshulcz.github.io/deja-vu/guide/delete-pi-session-history.html"></link>
+    <updated>2026-10-28T00:00:00Z</updated>
+    <summary>pi stores each session in a JSONL file under ~/.pi/agent/sessions. Find it, delete one session or all, or use deja delete with dry-run preview.</summary>
+  </entry>
+  <entry>
     <title>Delete Qwen Code chat history — deja-vu</title>
     <id>https://vshulcz.github.io/deja-vu/guide/delete-qwen-code-chat-history.html</id>
     <link rel="alternate" type="text/html" href="https://vshulcz.github.io/deja-vu/guide/delete-qwen-code-chat-history.html"></link>
@@ -282,12 +289,5 @@
     <link rel="alternate" type="text/html" href="https://vshulcz.github.io/deja-vu/guide/harnesses.html"></link>
     <updated>2026-10-23T00:00:00Z</updated>
     <summary>The forty-three coding agents deja indexes today, where each stores its history, and how to add a new one.</summary>
-  </entry>
-  <entry>
-    <title>Where coding agents store their history — session format registry</title>
-    <id>https://vshulcz.github.io/deja-vu/registry/README.html</id>
-    <link rel="alternate" type="text/html" href="https://vshulcz.github.io/deja-vu/registry/README.html"></link>
-    <updated>2026-10-23T00:00:00Z</updated>
-    <summary>Where Claude Code, Codex, Cursor, opencode and thirty-nine more coding agents keep their conversation history on disk, what is inside those files, and how each format drifts.</summary>
   </entry>
 </feed>
