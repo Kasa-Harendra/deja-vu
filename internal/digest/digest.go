@@ -521,6 +521,9 @@ func ProjectNameCandidates(cwd string) []string {
 		add(name)
 	}
 	cwd = projectRoot(cwd)
+	if isHomeOrRoot(cwd) {
+		return names
+	}
 	add(sources.PlainProjectName(cwd))
 	if base := filepath.Base(cwd); base != "" {
 		add(filepath.Base(filepath.Dir(cwd)) + "/" + base)
@@ -535,6 +538,9 @@ func ProjectNameCandidates(cwd string) []string {
 		if name, ok := sources.ProjectAliasFor(root); ok {
 			add(name)
 		}
+		if isHomeOrRoot(root) {
+			continue
+		}
 		add(sources.PlainProjectName(root))
 		if base := filepath.Base(root); base != "" {
 			add(filepath.Base(filepath.Dir(root)) + "/" + base)
@@ -542,6 +548,34 @@ func ProjectNameCandidates(cwd string) []string {
 		}
 	}
 	return names
+}
+
+// isHomeOrRoot reports whether p is the filesystem root or the user's home
+// directory. Neither is a project: a session started in ~ or under a dotfiles
+// repo at ~ has no project in common with the next unrelated session run from
+// there (#5750).
+func isHomeOrRoot(p string) bool {
+	p = strings.TrimSpace(p)
+	if p == "" {
+		return true
+	}
+	clean := filepath.Clean(p)
+	if clean == "." || clean == "/" || clean == string(filepath.Separator) || filepath.Dir(clean) == clean {
+		return true
+	}
+	home := sources.Home()
+	if home == "" {
+		return false
+	}
+	if strings.EqualFold(clean, filepath.Clean(home)) {
+		return true
+	}
+	if r1, err1 := filepath.EvalSymlinks(clean); err1 == nil {
+		if r2, err2 := filepath.EvalSymlinks(home); err2 == nil && strings.EqualFold(r1, r2) {
+			return true
+		}
+	}
+	return false
 }
 
 // PrimaryProjectName is the first of ProjectNameCandidates, the one a caller

@@ -4689,7 +4689,7 @@ func rereadsWholeSessions(p string) bool {
 		// it, and adding that to what the index held doubled the turns. Its
 		// counts start over with each pass, the goose trade above.
 		return true
-	case "grok", "zed", "hermes", "openclaw", "crush":
+	case "grok", "zed", "hermes", "openclaw", "crush", "claude":
 		// The same shape: each asks for the sessions touched since the stamp
 		// and hands them back whole, so what comes back replaces what the
 		// index holds for that key rather than adding to it (#2075). The
@@ -4861,6 +4861,9 @@ func resolveStorePaths() map[string]string {
 	// One store per Crush project, each read from its own watermark (#4381).
 	for _, db := range sources.CrushDBs() {
 		out[db] = "crush"
+	}
+	if cm := sources.ClaudeMemDBPath(); cm != "" {
+		out[cm] = "claude"
 	}
 	return out
 }
@@ -6361,6 +6364,9 @@ func setDatabaseStoreWatermarks(files map[string]FileState, sessions map[string]
 	// cursor selects sessions, so it is in rereadsWholeSessions too.
 	for _, db := range sources.CrushDBs() {
 		setStoreLastUpdated(files, sessions, "crush", db)
+	}
+	if cm := sources.ClaudeMemDBPath(); cm != "" {
+		setStoreLastUpdated(files, sessions, "claude", cm)
 	}
 }
 

@@ -183,14 +183,22 @@ func installTraeIDEAuto(exe string, uninstall bool) (installResult, error) {
 	}
 	var rs []installResult
 	for _, e := range editions {
-		if uninstall && !fileExists(e.hooksPath()) {
+		if !uninstall || fileExists(e.hooksPath()) {
+			r, err := installCodexHooksAt(exe, e.hooksPath(), "", traeIDEHookWiring, uninstall)
+			if err != nil {
+				return installResult{}, err
+			}
+			rs = append(rs, r)
+		}
+		extDir := filepath.Join(homeDir(), e.dataFolder, "extensions")
+		if uninstall && !isRealDir(extDir) {
 			continue
 		}
-		r, err := installCodexHooksAt(exe, e.hooksPath(), "", traeIDEHookWiring, uninstall)
+		st, err := installVSCodeStatusItemAt(extDir, exe, uninstall)
 		if err != nil {
 			return installResult{}, err
 		}
-		rs = append(rs, r)
+		rs = append(rs, st)
 	}
 	mcp, err := installTraeIDE(exe, uninstall)
 	if err != nil {

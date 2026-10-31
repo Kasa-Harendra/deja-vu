@@ -819,3 +819,17 @@ func TestBetweenEqualMatchesTheRecentOneLeads(t *testing.T) {
 		t.Fatalf("age stopped counting: %#v", hits)
 	}
 }
+
+// snippetAt and highlight used query.Tokens directly, which keeps stop words
+// like "in" and "at". When a stop word was absent from the passage where the
+// content terms met, tokenSpan returned 0 and the fallback centred the excerpt
+// on the first "in" or "at" substring at the top of the message (#5697).
+func TestSnippetCentresOnContentWordsNotStopWords(t *testing.T) {
+	msg := "Thinking about the layout at the top of the file. " +
+		strings.Repeat("unrelated background prose without those two words. ", 12) +
+		"The pgbouncer saturation threshold is configured under pool_max_conns."
+	got := snippet(msg, "pgbouncer in pool_max_conns at startup", nil)
+	if !strings.Contains(got, "pgbouncer") || !strings.Contains(got, "pool_max_conns") {
+		t.Fatalf("snippet centred on stop words instead of content terms: %q", got)
+	}
+}

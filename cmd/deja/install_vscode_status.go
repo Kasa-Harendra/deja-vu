@@ -101,7 +101,8 @@ function activate(context) {
           item.hide();
           return;
         }
-        item.text = line;
+        item.tooltip = line;
+        item.text = line.split(" · ").slice(0, 3).join(" · ");
         item.show();
       });
     } catch {
@@ -189,57 +190,110 @@ func setVSCodeExtensionEntry(extDir, dirName string, uninstall bool) (string, er
 	return writeIfChanged(path, old, next)
 }
 
+// installVSCodeStatusItemAt writes the status bar extension into one
+// extensions directory and names it in extensions.json; uninstall takes both
+// back.
+func installVSCodeStatusItemAt(extDir, exe string, uninstall bool) (installResult, error) {
+	dirName := vsCodeStatusID + "-" + vsCodeStatusVersion
+	dir := filepath.Join(extDir, dirName)
+	if uninstall {
+		had := isRealDir(dir)
+		a, err := setVSCodeExtensionEntry(extDir, dirName, true)
+		if err != nil {
+			return installResult{}, err
+		}
+		if err := os.RemoveAll(dir); err != nil {
+			return installResult{}, err
+		}
+		action := "unchanged"
+		if had {
+			action = "removed"
+			pruneCreatedDir(extDir)
+			pruneCreatedDir(filepath.Dir(extDir))
+		}
+		return wroteAll(
+			installResult{Path: filepath.Join(extDir, "extensions.json"), Action: a},
+			installResult{Path: dir, Action: action},
+		), nil
+	}
+	noteCreatedDirs(dir)
+	pkg, err := readConfig(filepath.Join(dir, "package.json"))
+	if err != nil {
+		return installResult{}, err
+	}
+	a1, err := writeIfChanged(filepath.Join(dir, "package.json"), pkg, []byte(vsCodeStatusPackageJSON()))
+	if err != nil {
+		return installResult{}, err
+	}
+	js, err := readConfig(filepath.Join(dir, "extension.js"))
+	if err != nil {
+		return installResult{}, err
+	}
+	a2, err := writeIfChanged(filepath.Join(dir, "extension.js"), js, []byte(vsCodeStatusJS(hookExeFor(exe, false))))
+	if err != nil {
+		return installResult{}, err
+	}
+	a3, err := setVSCodeExtensionEntry(extDir, dirName, false)
+	if err != nil {
+		return installResult{}, err
+	}
+	action := a1
+	if action == "unchanged" {
+		action = a2
+	}
+	return wroteAll(
+		installResult{Path: dir, Action: action},
+		installResult{Path: filepath.Join(extDir, "extensions.json"), Action: a3},
+	), nil
+}
+
+// vsCodeForkUserDir is the Code OSS User folder for a VS Code fork (Cursor,
+// Windsurf, Kiro, Antigravity).
+func vsCodeForkUserDir(app string) string {
+	switch runtime.GOOS {
+	case "darwin":
+		return filepath.Join(sources.Home(), "Library", "Application Support", app, "User")
+	case "windows":
+		if v := strings.TrimSpace(os.Getenv("APPDATA")); v != "" {
+			return filepath.Join(v, app, "User")
+		}
+		return filepath.Join(sources.Home(), "AppData", "Roaming", app, "User")
+	default:
+		if v := strings.TrimSpace(os.Getenv("XDG_CONFIG_HOME")); v != "" {
+			return filepath.Join(v, app, "User")
+		}
+		return filepath.Join(sources.Home(), ".config", app, "User")
+	}
+}
+
+// installForkStatusItemIfPresent writes the status bar extension into a VS Code
+// fork's extensions folder (~/.<dotFolder>/extensions) when that IDE is present
+// on disk, and removes it on uninstall.
+func installForkStatusItemIfPresent(appName, dotFolder, exe string, uninstall bool) (installResult, error) {
+	extDir := filepath.Join(sources.Home(), dotFolder, "extensions")
+	dirName := vsCodeStatusID + "-" + vsCodeStatusVersion
+	if uninstall {
+		if !isRealDir(filepath.Join(extDir, dirName)) && !fileExists(filepath.Join(extDir, "extensions.json")) {
+			return installResult{Action: "unchanged"}, nil
+		}
+		return installVSCodeStatusItemAt(extDir, exe, true)
+	}
+	if !isRealDir(extDir) && !isRealDir(vsCodeForkUserDir(appName)) {
+		return installResult{Action: "unchanged"}, nil
+	}
+	return installVSCodeStatusItemAt(extDir, exe, false)
+}
+
 // installVSCodeStatusItem writes the extension into every host's extensions
 // directory and names it in extensions.json; uninstall takes both back.
 func installVSCodeStatusItem(exe string, uninstall bool) (installResult, error) {
-	dirName := vsCodeStatusID + "-" + vsCodeStatusVersion
 	var results []installResult
 	for _, extDir := range vsCodeExtensionDirs() {
-		dir := filepath.Join(extDir, dirName)
-		if uninstall {
-			had := isRealDir(dir)
-			a, err := setVSCodeExtensionEntry(extDir, dirName, true)
-			if err != nil {
-				return installResult{}, err
-			}
-			results = append(results, installResult{Path: filepath.Join(extDir, "extensions.json"), Action: a})
-			if err := os.RemoveAll(dir); err != nil {
-				return installResult{}, err
-			}
-			action := "unchanged"
-			if had {
-				action = "removed"
-				pruneCreatedDir(extDir)
-			}
-			results = append(results, installResult{Path: dir, Action: action})
-			continue
-		}
-		pkg, err := readConfig(filepath.Join(dir, "package.json"))
+		r, err := installVSCodeStatusItemAt(extDir, exe, uninstall)
 		if err != nil {
 			return installResult{}, err
 		}
-		a1, err := writeIfChanged(filepath.Join(dir, "package.json"), pkg, []byte(vsCodeStatusPackageJSON()))
-		if err != nil {
-			return installResult{}, err
-		}
-		js, err := readConfig(filepath.Join(dir, "extension.js"))
-		if err != nil {
-			return installResult{}, err
-		}
-		a2, err := writeIfChanged(filepath.Join(dir, "extension.js"), js, []byte(vsCodeStatusJS(hookExeFor(exe, false))))
-		if err != nil {
-			return installResult{}, err
-		}
-		a3, err := setVSCodeExtensionEntry(extDir, dirName, false)
-		if err != nil {
-			return installResult{}, err
-		}
-		action := a1
-		if action == "unchanged" {
-			action = a2
-		}
-		results = append(results, installResult{Path: dir, Action: action},
-			installResult{Path: filepath.Join(extDir, "extensions.json"), Action: a3})
+		results = append(results, r)
 	}
 	return wroteAll(results...), nil
 }

@@ -1386,7 +1386,7 @@ func looksPasted(s model.Session) bool {
 const promotedNoteBoost = 1.25
 
 // wornBoost rewards sessions agents keep recalling. The shape is set by
-// measurement (scripts/reusebench, internal/search reuse tests): at the old
+// measurement (internal/search reuse tests): at the old
 // 0.05 slope / 1.2 cap the boost rescued a reused answer only when a louder
 // session tied it exactly — a single extra term of noise buried it, so the
 // signal was nearly inert. A 0.10 slope and 1.5 cap let reuse surface an answer
@@ -2614,7 +2614,7 @@ func snippetAt(s, q string, re *regexp.Regexp, matched func(string) bool) string
 		low := lower(s)
 		b := densestMention(low, lower(q))
 		if b < 0 {
-			toks := query.Tokens(q)
+			toks, _ := QueryParts(q)
 			// Centre on where the query's words meet, not on the first one to
 			// appear. A message that says a word once at the top and answers the
 			// question four paragraphs down was excerpted at the top, so the
@@ -2878,7 +2878,7 @@ func highlight(s, q string, isRe bool, color bool) string {
 	if strings.Contains(lower(s), lower(q)) {
 		return regexp.MustCompile(`(?i)`+yoPattern(q)).ReplaceAllStringFunc(s, func(x string) string { return cMatch + x + cReset })
 	}
-	toks := query.Tokens(q)
+	toks, _ := QueryParts(q)
 	if len(toks) == 0 {
 		return s
 	}
