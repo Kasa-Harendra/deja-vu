@@ -526,10 +526,17 @@ func promptDigestBody(dir, sessionID string, ss []model.Session, confident bool,
 	}
 	// The sessions passed on where their words were said, but the block is
 	// what the agent reads. When no line it quotes holds two of the question's
-	// words, each line is about something else that shares one word with it.
-	// Replayed over 160 real prompts, that was 34 of the 68 blocks labelled
-	// unrelated and none of the 5 that answered the prompt.
-	if !search.QuoteCarriesTerms(digest, terms, min(2, len(terms))) {
+	// words — unless the question named a single rare subject and the quote
+	// holds that subject — each line is about something else that shares one
+	// word with it. When the question joins two rare subjects, the block must
+	// also cover them rather than answering a two-subject question with a
+	// session that only ever heard of one.
+	named := namedLeadTerms(terms, idfOf, index.TopIDF(dir))
+	if len(named) == 1 {
+		if !search.QuoteCarriesTerms(digest, named, 1) && !search.QuoteCarriesTerms(digest, terms, min(2, len(terms))) {
+			return "", false
+		}
+	} else if !search.QuoteCarriesTerms(digest, terms, min(2, len(terms))) {
 		return "", false
 	}
 	// The line the agent is asked to say names a session; it has to be one
@@ -726,19 +733,34 @@ func (p *promptPicker) pick(ranked []model.Session, matched, strong, naming []in
 // Asking a long session for three words together instead of two was
 // measured too: it emptied 2 of 5 blocks that answered the prompt.
 func (p *promptPicker) leadTermsMeet(s model.Session) bool {
-	var named []string
-	for _, t := range search.IdentifyingTerms(p.leadTerms, p.idfOf, p.topIDF) {
-		if symbolShaped(t) || latinWord(t) {
-			named = append(named, t)
+	if fixedNamed := namedLeadTerms(p.leadTerms, p.idfOf, 1e9); len(fixedNamed) >= 2 {
+		for _, t := range fixedNamed {
+			if !search.SpeechCarriesAnyTerm(s, []string{t}) {
+				return false
+			}
 		}
+		if len(s.Messages) >= dejaVuMaxMessages {
+			return search.SpeechCarriesTermsTogether(s, fixedNamed, 2)
+		}
+		return true
 	}
-	if len(named) > 0 && search.SpeechCarriesAnyTerm(s, named) {
+	if named := namedLeadTerms(p.leadTerms, p.idfOf, p.topIDF); len(named) > 0 && search.SpeechCarriesAnyTerm(s, named) {
 		return true
 	}
 	if p.unscoped {
 		return false
 	}
 	return search.SpeechCarriesTermsTogether(s, p.leadTerms, 2)
+}
+
+func namedLeadTerms(terms []string, idfOf map[string]float64, topIDF float64) []string {
+	var named []string
+	for _, t := range search.IdentifyingTerms(terms, idfOf, topIDF) {
+		if symbolShaped(t) || latinWord(t) {
+			named = append(named, t)
+		}
+	}
+	return named
 }
 
 // latinWord reports a term written in Latin letters, the script tool and
