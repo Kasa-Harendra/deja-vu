@@ -90,16 +90,85 @@
   })();
 
   /* ── say that the guide can be searched ────────────────────────────── */
+  var docLang=(document.documentElement.lang||'en').toLowerCase();
+  var isRu=docLang.indexOf('ru')===0,isZh=docLang.indexOf('zh')===0;
   (function(){
     var nav=document.querySelector('nav .spacer');
     if(!nav)return;
     var hint=document.createElement('button');
     hint.className='searchhint';hint.type='button';
-    hint.innerHTML='<span>search the guide</span><kbd>/</kbd>';
+    hint.innerHTML='<span>'+(isRu?'поиск по документации':isZh?'搜索指南':'search the guide')+'</span><kbd>/</kbd>';
     hint.addEventListener('click',function(){
       document.dispatchEvent(new KeyboardEvent('keydown',{key:'/',bubbles:true}));
     });
     nav.parentNode.insertBefore(hint,nav.nextSibling);
+
+    /* upgrade the top nav with a Demo link and a prominent ★ GitHub button */
+    var gh=nav.parentNode.querySelector('a[href*="github.com/vshulcz/deja-vu"]');
+    if(gh){
+      gh.className='nav-cta';
+      gh.innerHTML='<span class="star-ic" aria-hidden="true">★</span>GitHub';
+      var homeLink=nav.parentNode.querySelector('a.brand');
+      var rootPrefix=homeLink?homeLink.getAttribute('href'):'../';
+      if(rootPrefix.slice(-1)!=='/')rootPrefix+='/';
+      if(!nav.parentNode.querySelector('a[href*="view/"]')){
+        var demo=document.createElement('a');
+        demo.className='lnk';
+        demo.href=rootPrefix+'view/';
+        demo.textContent=isRu?'Демо':isZh?'演示':'Demo';
+        nav.parentNode.insertBefore(demo,gh);
+      }
+    }
+  })();
+
+  /* ── enrich the closing star CTA with a 1-click install & live demo ─── */
+  (function(){
+    var cta=art.querySelector('.star-cta');
+    if(!cta){
+      cta=document.createElement('p');
+      cta.className='star-cta';
+      art.appendChild(cta);
+    }
+    var homeLink=document.querySelector('nav a.brand');
+    var rootPrefix=homeLink?homeLink.getAttribute('href'):'../';
+    if(rootPrefix.slice(-1)!=='/')rootPrefix+='/';
+    var cmdText='curl -fsSL https://raw.githubusercontent.com/vshulcz/deja-vu/main/install.sh | sh';
+    var leadTxt=isRu?'Установка за 10 секунд, индекс за 10.':isZh?'十秒安装，十秒建索引。':'Ten seconds to install, ten to index.';
+    var starTxt=isRu?'★ Поставить звезду на GitHub':isZh?'★ 在 GitHub 上点 Star':'★ Star deja-vu on GitHub';
+    var demoTxt=isRu?'Живое демо в браузере →':isZh?'浏览器在线演示 →':'Try live browser demo →';
+    cta.innerHTML=
+      '<div class="cta-cmd"><span class="p">$</span><code>'+cmdText+'</code><button type="button">copy</button></div>'+
+      '<div class="cta-row"><span>'+leadTxt+'</span>'+
+      '<a class="cta-btn" href="https://github.com/vshulcz/deja-vu">'+starTxt+'</a>'+
+      '<a class="cta-demo" href="'+rootPrefix+'view/">'+demoTxt+'</a></div>';
+    var btn=cta.querySelector('button');
+    if(btn){
+      btn.addEventListener('click',function(){
+        navigator.clipboard.writeText(cmdText);
+        btn.textContent='copied';
+        setTimeout(function(){btn.textContent='copy'},1200);
+      });
+    }
+
+    var saveFirst=art.querySelector('.save-first');
+    if(saveFirst&&!saveFirst.querySelector('.save-actions')){
+      var saveCmd='curl -fsSL https://raw.githubusercontent.com/vshulcz/deja-vu/main/install.sh | sh && deja index';
+      var bar=document.createElement('div');
+      bar.className='save-actions';
+      bar.innerHTML=
+        '<div class="save-cmd"><span class="p">$</span><code>'+saveCmd+'</code><button type="button">copy</button></div>'+
+        '<a class="save-btn" href="https://github.com/vshulcz/deja-vu">'+starTxt+'</a>'+
+        '<a class="save-demo" href="'+rootPrefix+'view/">'+demoTxt+'</a>';
+      saveFirst.appendChild(bar);
+      var sbtn=bar.querySelector('button');
+      if(sbtn){
+        sbtn.addEventListener('click',function(){
+          navigator.clipboard.writeText(saveCmd);
+          sbtn.textContent='copied';
+          setTimeout(function(){sbtn.textContent='copy'},1200);
+        });
+      }
+    }
   })();
 
 

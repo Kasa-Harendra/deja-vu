@@ -43,10 +43,10 @@ code{font-family:var(--mono);font-size:.88em}
   -webkit-mask-image:radial-gradient(ellipse 90% 50% at 50% 0%,#000 10%,transparent 65%);
   mask-image:radial-gradient(ellipse 90% 50% at 50% 0%,#000 10%,transparent 65%)}
 
-.wrap{max-width:1060px;margin:0 auto;padding:0 32px;position:relative;z-index:1}
+.wrap{max-width:1280px;margin:0 auto;padding:0 32px;position:relative;z-index:1}
 
 nav{position:sticky;top:0;z-index:20;display:flex;align-items:center;gap:6px;
-  padding:16px 32px;max-width:1060px;margin:0 auto;font:13px/1 var(--mono);
+  padding:16px 32px;max-width:1280px;margin:0 auto;font:13px/1 var(--mono);
   backdrop-filter:blur(8px);background:rgba(11,15,16,.72)}
 nav .brand{display:flex;align-items:center;gap:10px;font-weight:600;color:var(--ink)}
 nav .brand img{width:26px;height:26px}
@@ -54,6 +54,10 @@ nav .spacer{flex:1}
 nav a.lnk{color:var(--faint);padding:7px 10px;border-radius:6px}
 nav a.lnk:hover{color:var(--ink);background:var(--panel)}
 nav a.lnk[aria-current]{color:var(--ph-hi)}
+nav a.nav-cta{display:inline-flex;align-items:center;gap:6px;padding:8px 14px;border-radius:7px;
+  font:600 13px/1 var(--mono);background:var(--ph);color:var(--bg);margin-left:4px}
+nav a.nav-cta:hover{background:var(--ph-hi);color:var(--bg)}
+nav a.nav-cta .star-ic{color:var(--bg);font-size:12px;line-height:1}
 .btn{display:inline-block;padding:8px 14px;border-radius:7px;font:600 13px var(--mono);
   background:var(--ph);color:var(--bg);border:0}
 .btn:hover{background:var(--ph-hi);color:var(--bg)}
@@ -64,7 +68,7 @@ h3{font:600 16.5px var(--sans);color:var(--ink);margin:0 0 6px}
 p{margin:0 0 16px}
 .grad{color:var(--amber)}
 
-.js .reveal{opacity:0;transform:translateY(10px);transition:opacity .5s ease,transform .5s ease}
+.js .reveal{opacity:1;transform:none;transition:opacity .5s ease,transform .5s ease}
 .js .reveal.in{opacity:1;transform:none}
 @media(prefers-reduced-motion:reduce){.reveal{opacity:1;transform:none;transition:none}}
 
@@ -74,11 +78,26 @@ footer a{color:var(--faint)}
 footer a:hover{color:var(--ph-hi)}
 /* The same quiet closing line the landing page ends on: inside the article,
    below the related links, and never louder than the install link above it. */
-.star-cta{margin:40px 0 0;padding:15px 18px;background:var(--panel);
+.star-cta{margin:40px 0 0;padding:18px 20px;background:var(--panel);
   border:1px solid var(--line);border-left:3px solid var(--amber);
-  border-radius:0 10px 10px 0;color:var(--body);font:13px/1.55 var(--mono)}
-.star-cta a{color:var(--amber);font-weight:600}
+  border-radius:0 12px 12px 0;color:var(--body);font:13px/1.55 var(--mono)}
+.star-cta a{color:var(--amber);font-weight:600;text-decoration:none !important}
 .star-cta a:hover{color:var(--ink)}
+.star-cta .cta-cmd{display:flex;align-items:center;gap:10px;background:var(--bg);
+  border:1px solid var(--line);border-radius:8px;padding:10px 13px;margin:0 0 14px;
+  font:12.5px var(--mono);color:var(--ink)}
+.star-cta .cta-cmd .p{color:var(--amber)}
+.star-cta .cta-cmd code{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+  background:none;border:0;padding:0;color:var(--ink)}
+.star-cta .cta-cmd button{background:var(--panel);border:1px solid var(--line);color:var(--faint);
+  border-radius:6px;padding:4px 10px;font:11px var(--mono);cursor:pointer}
+.star-cta .cta-cmd button:hover{color:var(--ink);border-color:var(--ph-dim)}
+.star-cta .cta-row{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.star-cta .cta-btn{display:inline-flex;align-items:center;gap:6px;padding:7px 14px;
+  border-radius:7px;background:var(--amber);color:var(--bg) !important;font-weight:700}
+.star-cta .cta-btn:hover{background:#ffa033;color:var(--bg) !important}
+.star-cta .cta-demo{color:var(--ph-hi) !important;font-weight:500}
+.star-cta .cta-demo:hover{color:var(--ink) !important}
 
 /* Above-the-fold callout on high-traffic deletion and storage pages: tell the
    reader how to keep their sessions searchable before they wipe raw files. */
@@ -87,6 +106,21 @@ footer a:hover{color:var(--ph-hi)}
   padding:14px 18px;margin:0 0 22px;font-size:15px;line-height:1.6}
 .save-first b{color:var(--ink)}
 .save-first code{font-size:.86em}
+.save-first .save-actions{display:flex;align-items:center;gap:10px;flex-wrap:wrap;
+  margin-top:10px;padding-top:10px;border-top:1px solid var(--line);font:12.5px var(--mono)}
+.save-first .save-cmd{display:flex;align-items:center;gap:8px;flex:1 1 320px;min-width:0;
+  background:var(--bg);border:1px solid var(--line);border-radius:6px;padding:5px 10px}
+.save-first .save-cmd .p{color:var(--faint);user-select:none}
+.save-first .save-cmd code{background:none;border:0;padding:0;color:var(--ph-hi);
+  font-size:12px;overflow-x:auto;white-space:nowrap;flex:1}
+.save-first .save-cmd button{background:var(--panel-hi);border:1px solid var(--line);
+  color:var(--dim);font:11px var(--mono);padding:2px 8px;border-radius:4px;cursor:pointer}
+.save-first .save-cmd button:hover{color:var(--ink);border-color:var(--ph)}
+.save-first .save-btn{display:inline-flex;align-items:center;gap:5px;padding:5px 12px;
+  border-radius:6px;background:var(--amber);color:var(--bg) !important;font-weight:700;white-space:nowrap}
+.save-first .save-btn:hover{background:#ffa033;color:var(--bg) !important}
+.save-first .save-demo{color:var(--ph-hi) !important;white-space:nowrap}
+.save-first .save-demo:hover{color:var(--ink) !important}
 
 /* ── the doc layout ───────────────────────────────────────────────────── */
 .doc{display:grid;grid-template-columns:224px 1fr;gap:56px;padding:40px 0 0}
@@ -99,7 +133,7 @@ footer a:hover{color:var(--ph-hi)}
 .doc aside a[aria-current]{color:var(--ph-hi);border-left-color:var(--ph);background:var(--panel)}
 /* long words break rather than push the column: on a 360px phone an italic
    phrase was hanging nine pixels off the edge */
-.doc article{min-width:0;max-width:74ch;overflow-wrap:break-word}
+.doc article{min-width:0;max-width:86ch;overflow-wrap:break-word}
 
 /* The prompt before the title stays: it is a terminal tool, and the mark of one
    costs a heading nothing. The ## before every h2 did not — at one per section
@@ -199,7 +233,9 @@ h2:hover .hlink{opacity:1}
 .toc a:hover{color:var(--ink)}
 .toc a.on{color:var(--ph-hi)}
 @media(min-width:1240px){
-  .doc{grid-template-columns:224px minmax(0,1fr) 200px;gap:48px}
+  .doc{grid-template-columns:220px minmax(0,1fr);gap:44px}
+  .doc:has(.toc){grid-template-columns:220px minmax(0,1fr) 185px;gap:40px}
+  .doc:not(:has(.toc)) article{max-width:none}
 }
 @media(max-width:1239px){.toc{display:none}}
 
