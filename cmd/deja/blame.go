@@ -16,6 +16,10 @@ import (
 	"github.com/vshulcz/deja-vu/internal/sources"
 )
 
+// blameNeedsPath is the refusal blame gives when no file path is supplied
+// or when an empty or whitespace-only argument is passed (#5938).
+const blameNeedsPath = "blame needs a path — `deja blame <file>` or `deja blame <file>:<line>`"
+
 // blameMode is what the caller asked for beyond the hits: the line answer on
 // its own (`--attribution`), as JSON, and whether to record it in
 // refs/notes/deja (#3723).
@@ -36,6 +40,12 @@ func parseBlame(args []string) (string, search.BlameOptions, blameMode, error) {
 	for i := 0; i < len(args); i++ {
 		a := args[i]
 		if afterDashDash {
+			// A whitespace-only token is no path at all: without this,
+			// `deja blame -- "   "` sailed past the missing-path check, and a
+			// leading empty argument was silently ignored (#5938).
+			if strings.TrimSpace(a) == "" {
+				return "", o, mode, errors.New(blameNeedsPath)
+			}
 			if path != "" {
 				return "", o, mode, errors.New("blame accepts one path")
 			}
@@ -91,6 +101,12 @@ func parseBlame(args []string) (string, search.BlameOptions, blameMode, error) {
 				}
 				return "", o, mode, fmt.Errorf("blame: unknown flag %q; a path or question that starts with a dash goes after `--`", a)
 			}
+			// A whitespace-only token is no path at all: without this,
+			// `deja blame "   "` sailed past the missing-path check, and a
+			// leading empty argument was silently ignored (#5938).
+			if strings.TrimSpace(a) == "" {
+				return "", o, mode, errors.New(blameNeedsPath)
+			}
 			if path != "" {
 				return "", o, mode, errors.New("blame accepts one path")
 			}
@@ -98,7 +114,7 @@ func parseBlame(args []string) (string, search.BlameOptions, blameMode, error) {
 		}
 	}
 	if path == "" {
-		return "", o, mode, errors.New("blame needs a path — `deja blame <file>` or `deja blame <file>:<line>`")
+		return "", o, mode, errors.New(blameNeedsPath)
 	}
 	return path, o, mode, nil
 }
